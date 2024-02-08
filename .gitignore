@@ -133,3 +133,4 @@ dist
 # custom
 package-lock.json
 **/wip
+test.js

@@ -1,6 +1,5 @@
 # syntax = docker/dockerfile:1.0-experimental
 FROM node:latest AS base
-
 ENV HOST localhost
 ENV PORT 3333
 EXPOSE 3333
@@ -23,10 +22,11 @@ ENV NODE_ENV production
 CMD [ "npm", "start", "-s" ]
 
 FROM node:21.6.0-bullseye-slim AS development
+RUN apt-get update && apt-get install -y curl
 WORKDIR /usr/app
 COPY --from=base --chown=node:node /usr/app .
 # Install dependencies first, add code later: docker is caching by layers
-RUN --mount=type=secret,id=npm,target=~/.npmrc npm i
+RUN --mount=type=secret,id=npm,target=/root/.npmrc npm i
 
 # Docker base image is already NODE_ENV=production
 ENV NODE_ENV development

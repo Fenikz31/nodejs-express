@@ -1,8 +1,7 @@
-import express, { IRouter, Router } from 'express';
+import express, { Router } from 'express';
 import fs from 'fs/promises';
 import path from 'path';
 
-import app from '../src/app';
 import CreateLogger from './logger';
 
 import coreControllers from '../src/controllers/core/index';
@@ -54,7 +53,7 @@ export default async function CreateRouters(): Promise< Router[]> {
 
     await Promise.all(
       apis.map( async ( api ) => {
-        const apiPath = path.join( routesPath, api, 'index.ts' );
+        const apiPath = path.join( routesPath, api, 'index' );
         try {
           const module = await import( apiPath );
           const moduleRoutes = module.default;

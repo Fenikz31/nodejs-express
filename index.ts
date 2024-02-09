@@ -110,9 +110,11 @@ process.on( 'SIGTERM', () => {
 });
 
 function shutdown() {
+  const logger = CreateLogger();
   logger.notice( 'Received signal for shutdown. Closing server...' );
   server.close(() => {
     logger.notice( 'Server closed. Exiting process.' );
+    logger.close();
     process.exit( 0 );
   });
 }

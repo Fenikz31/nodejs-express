@@ -1,18 +1,28 @@
-import Winston  from 'winston';
+import Winston, { createLogger, format, Logger, transport } from 'winston';
 import shortid from 'shortid';
 import util from 'util';
 
-
-const { createLogger, format } = Winston;
 const { LOG_LEVEL, LOG_PATH, NODE_ENV, npm_package_name } = process.env;
 const level = LOG_LEVEL || 'debug';
 const logPath = LOG_PATH || '/var/log';
 
-export default function CreateLogger ({
-  id = shortid.generate(),
-  module = null
-} = {}) {
-  const colors = {
+interface LoggerOptions {
+  id?: string;
+  module?: string | null;
+}
+
+interface Colors {
+  [ key: string ]: string;
+}
+
+
+export interface CustomLogger extends Logger {
+  create?: () => Logger;
+  init?: () => string;
+}
+
+function CreateLogger({ id = shortid.generate(), module = null }: LoggerOptions = {}): CustomLogger {
+  const colors: Colors = {
     alert: 'orange',
     crit: 'red',
     debug: 'white',
@@ -24,35 +34,34 @@ export default function CreateLogger ({
     warning: 'yellow',
   };
 
-  Winston.addColors( colors );
+  Winston.addColors(colors);
 
   const customFormat = format.printf(( info ) => {
-    const { timestamp, level, message, service, args } = info
+    const { timestamp, level, message, service, args } = info;
     return `${ timestamp } - ${ id }  -  [ ${ level } ] - ( ${ service } ) ${ message } ${ args ? args : '' }`;
   });
 
-  const transports = []
+  const transports: transport[] = [];
 
   if ( NODE_ENV === 'production' ) {
     transports.push(
-      new Winston.transports.File({ filename: `${ logPath }/error.log`, level: 'error', timestamp: true }),
-      new Winston.transports.File({ filename: `${ logPath }/combined.log`, timestamp: true })
-    )
+      new Winston.transports.File({ filename: `${ logPath }/error.log`, level: 'error' }),
+      new Winston.transports.File({ filename: `${ logPath }/combined.log` })
+    );
   }
 
   if ( NODE_ENV !== 'production' ) {
     transports.push(
       new Winston.transports.Console({
-        // close: () => CreateLogger({ id, module }),
         format: format.combine(
           format.timestamp(),
           format.prettyPrint(),
           format.json(),
           format(( info ) => {
-            info.level = info.level.toUpperCase()
+            info.level = info.level.toUpperCase();
             if ( info[ Symbol.for( 'splat' )]) {
-              const Arguments = info[ Symbol.for( 'splat' )]
-              info.args = util.formatWithOptions({ colors: true, depth: null, sorted: true }, ...Arguments)
+              const Arguments = info[ Symbol.for( 'splat' )];
+              info.args = util.formatWithOptions({ colors: true, depth: null, sorted: true }, ...Arguments );
             }
 
             return info;
@@ -62,15 +71,14 @@ export default function CreateLogger ({
         ),
         handleExceptions: true,
         handleRejections: true,
-        level
-      })
-    )
+        level,
+      }) as transport
+    );
   }
 
-  var logger = createLogger({
+  const logger: CustomLogger = createLogger({
     defaultMeta: { id, service: module || npm_package_name },
-    exitOnError: false, // do not exit on handled exceptions
-    // handleExceptions: true,
+    exitOnError: false,
     level,
     levels: {
       ...Winston.config.syslog.levels,
@@ -84,3 +92,5 @@ export default function CreateLogger ({
 
   return logger;
 }
+
+export default CreateLogger;

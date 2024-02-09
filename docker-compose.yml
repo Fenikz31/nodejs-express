@@ -2,22 +2,14 @@ version: '3.8'
 
 services:
   boilerplate:
-    container_name: boilerplate       # Change container name
+    container_name: boilerplate-ts      # Change container name
+    command: npm run watch
     restart: always
     build:
       context: .
       secrets:
         - npm
       target: development
-    develop:
-      watch:
-        - action: sync
-          path: .
-          target: /usr/app/*
-          ignore:
-            - node_modules/
-        - action: rebuild
-          path: package.json
     environment:
       HOST: $HOST
       PORT: $PORT

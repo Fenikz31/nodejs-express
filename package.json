@@ -7,7 +7,7 @@
     "build": "tsc",
     "dev": "node --watch index.js --watch-path=./src --watch-path=./utils --trace-warnings",
     "start": "node index.js",
-    "watch": "nodemon --watch 'index.ts src/**/*.ts' --exec 'ts-node index.ts'",
+    "watch": "nodemon -e js,mjs,cjs,json,ts --watch '**/*.ts' --exec 'ts-node index.ts'",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
